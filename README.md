@@ -1,0 +1,1 @@
+“Although class weighting is commonly used to address class imbalance, applying class_weight='balanced' to the Random Forest model led to reduced F1-score and MCC. This suggests that the default ensemble configuration already captured minority class patterns effectively, and additional re-weighting introduced noise and reduced generalization.”
