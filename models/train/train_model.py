@@ -10,6 +10,12 @@ from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from collections import Counter
 
 from sklearn.metrics import (
     accuracy_score,
@@ -101,6 +107,109 @@ def train_logistic_regression_model(X_train, y_train, preprocessor):
     print(f"Model training completed using Logistic Regression.")
     return model
 
+# training using decision tree
+def train_decision_tree_model(X_train, y_train, preprocessor):
+    random_state = 42
+    print(f"Training Decision tree classifier model with random state: {random_state}.")
+    model = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            ("classifier", DecisionTreeClassifier(random_state=random_state))
+        ]
+    )
+
+    model.fit(X_train, y_train)
+    print(f"Model training completed using Decision Tree Classifier.")
+    return model
+
+# training using KNN
+def train_knn(X_train, y_train, preprocessor):
+    n_neighbours=5
+    print(f"Training KNN classifier model with n_neighbours: {n_neighbours}.")
+    model = Pipeline(
+        steps=[
+            ("preprocessor", preprocessor),
+            ("classifier", KNeighborsClassifier(n_neighbors=n_neighbours))
+        ]
+    )
+
+    model.fit(X_train, y_train)
+    print(f"Model training completed using KNN.")
+    return model
+
+# training using naive bayes
+def train_naive_bayes(X_train, y_train):
+    # Naive Bayes must not use the standardScalar
+    # Using minmaxScaler for naive bayes
+    print(f"Training naive baayes model.")
+    numeric_features = X.select_dtypes(include=["int64", "float64"]).columns
+    categorical_features = X.select_dtypes(include=["object"]).columns
+
+    numeric_data_transformer = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="median")),
+        ("scaler", MinMaxScaler())
+    ])
+
+    categorical_data_transformer = Pipeline(steps=[
+        ("imputer", SimpleImputer(strategy="most_frequent")),
+        ("encoder", OneHotEncoder(handle_unknown="ignore"))
+    ])
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", numeric_data_transformer, numeric_features),
+            ("cat", categorical_data_transformer, categorical_features)
+        ]
+    )
+
+    model = Pipeline(steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", GaussianNB())
+    ])
+    model.fit(X_train, y_train)
+    print(f"Model training completed using Naive bayes.")
+    return model
+
+# training using random forest
+def train_random_forest(X_train, y_train, preprocessor):
+    n_estimators=100
+    random_state=42
+    n_jobs=1
+
+    print(f""" Training naive baayes model with {n_estimators} estimators and 
+          random_state: ${random_state}. """)
+
+    model = Pipeline(steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", RandomForestClassifier(
+            n_estimators=n_estimators,
+            random_state=random_state,
+            n_jobs=-n_jobs,
+            class_weight="balanced"
+        ))
+    ])
+
+    model.fit(X_train, y_train)
+    print(f"Model training completed using random forest.")
+    return model
+
+# training using xgboost
+def train_xgboost_model(X_train, y_train, preprocessor):
+    eval_metrics = "logloss"
+    print(f"Training xgBoost model with {eval_metrics} evaluation metrics.")
+    model = Pipeline(steps=[
+        ("preprocessor", preprocessor),
+        ("classifier", XGBClassifier(
+            eval_metric=eval_metrics,
+            random_state=42,
+            use_label_encoder=False
+        ))
+    ])
+
+    model.fit(X_train, y_train)
+    print(f"Model training completed using xgBoost.")
+    return model
+
 # evaluating model with the test data and generting evaluation metrics
 def evaluate_model(model, X_test, y_test):
     print("Evaluating model on the test data.")
@@ -140,10 +249,29 @@ if __name__=="__main__":
 
     results = {}
 
-
     logistic_regression_model = train_logistic_regression_model(X_train, y_train, preprocessor)
     results["Logistic Regression"] = evaluate_model(logistic_regression_model, X_test, y_test)
     save_model(logistic_regression_model, 'models/logistic_regression.pkl')
+
+    decision_tree_model = train_decision_tree_model(X_train, y_train, preprocessor)
+    results["Decision Tree"] = evaluate_model(decision_tree_model, X_test, y_test)
+    save_model(decision_tree_model, "models/decision_tree.pkl")
+
+    knn_model = train_knn(X_train, y_train, preprocessor)
+    results["KNN"] = evaluate_model(knn_model, X_test, y_test)
+    save_model(knn_model, "models/knn.pkl")
+
+    naive_bayes_model = train_naive_bayes(X_train, y_train)
+    results["Naive Bayes"] = evaluate_model(naive_bayes_model, X_test, y_test)
+    save_model(naive_bayes_model, "models/naive_bayes.pkl")
+
+    random_forest_model = train_random_forest(X_train, y_train, preprocessor)
+    results["Random Forest"] = evaluate_model(random_forest_model, X_test, y_test)
+    save_model(random_forest_model, "models/random_forest.pkl")
+
+    xgb_model = train_xgboost_model(X_train, y_train, preprocessor)
+    results["XGBoost"] = evaluate_model(xgb_model, X_test, y_test)
+    save_model(xgb_model, "models/xgboost.pkl")
 
     print("\nMODEL COMPARISON RESULTS\n")
     for model_name, metrics in results.items():
