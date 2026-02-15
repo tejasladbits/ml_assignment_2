@@ -95,7 +95,7 @@ Instead of relying only on the default prediction threshold of 0.5, a lower thre
 This is suitable for marketing analytics, where missing potential subscribers is costlier than contacting non-subscribers.
 
 ## d. Streamlit Application
-
+URL: https://tejas-lad-ml-assignment.streamlit.app/
 An interactive Streamlit application was developed with the following features:
 
 - Download sample test datasets with configurable parameters
