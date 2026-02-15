@@ -11,15 +11,19 @@ from sklearn.metrics import (
     confusion_matrix, precision_score
 )
 
+if "show_comparison" not in st.session_state:
+    st.session_state.show_comparison = False
+
 st.set_page_config(
     page_title="Bank Marketing data analytics",
     page_icon="🦈",
     layout="wide"
 )
 
-st.title("ML Assignment - 2")
-st.write("Author: Tejas Kishor Lad")
+st.title("ML Assignment - 2 (Dataset: Bank Marketing data analytics)")
+st.write("Name: Tejas Kishor Lad")
 st.write("BITS ID: 2025AA05206")
+st.divider()
 
 @st.cache_resource
 def load_models():
@@ -44,7 +48,6 @@ left_col, divider_col, right_col = st.columns([1.3, 0.05, 2.7])
 
 with left_col:
     with st.expander("Download Sample Test Data"):
-        st.subheader("⬇️ Download Sample Test Data")
         dcol1, dcol2, dcol3 = st.columns(3)
 
         with dcol1:
@@ -74,7 +77,7 @@ with left_col:
         csv_data = test_df.to_csv(index=False).encode("utf-8")
 
         st.download_button(
-            label="📥 Download Test CSV",
+            label="Download Test CSV",
             data=csv_data,
             file_name="bank_marketing_test_data.csv",
             mime="text/csv"
@@ -119,6 +122,9 @@ with divider_col:
     )
 
 with right_col:
+    if st.button("🔁 Compare All Models"):
+        st.session_state.show_comparison = not st.session_state.show_comparison
+
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
 
@@ -129,39 +135,70 @@ with right_col:
         X_test = df.drop("y", axis=1)
         y_test = df["y"].map({"no": 0, "yes": 1})
 
-        y_proba = models[selected_model_name].predict_proba(X_test)[:, 1]
-        y_pred = (y_proba >= 0.35).astype(int)
+        if st.session_state.show_comparison:
+            results = []
 
-        st.subheader("📈 Performance Metrics")
+            for model_name, model in models.items():
+                y_proba = model.predict_proba(X_test)[:, 1]
+                y_pred = (y_proba >= 0.35).astype(int)
 
-        m1, m2, m3 = st.columns(3)
-        m4, m5, m6 = st.columns(3)
+                results.append({
+                    "Model": model_name,
+                    "Accuracy": accuracy_score(y_test, y_pred),
+                    "AUC": roc_auc_score(y_test, y_proba),
+                    "Precision": precision_score(y_test, y_pred),
+                    "Recall": recall_score(y_test, y_pred),
+                    "F1": f1_score(y_test, y_pred),
+                    "MCC": matthews_corrcoef(y_test, y_pred)
+                })
 
-        m1.metric("Accuracy", f"{accuracy_score(y_test, y_pred):.4f}")
-        m2.metric("AUC", f"{roc_auc_score(y_test, y_proba):.4f}")
-        m3.metric("Precision", f"{precision_score(y_test, y_pred):.4f}")
+            st.subheader("Model Comparison")
 
-        m4.metric("Recall", f"{recall_score(y_test, y_pred):.4f}")
-        m5.metric("F1 Score", f"{f1_score(y_test, y_pred):.4f}")
-        m6.metric("MCC", f"{matthews_corrcoef(y_test, y_pred):.4f}")
+            results_df = pd.DataFrame(results)
+            numeric_cols = results_df.columns.drop("Model")
 
-        st.subheader("🧩 Confusion Matrix Analysis")
+            st.dataframe(
+                results_df.style.format({col: "{:.4f}" for col in numeric_cols}),
+                use_container_width=True
+            )
 
-        cm = confusion_matrix(y_test, y_pred)
 
-        fig, ax = plt.subplots(figsize=(6, 5))
-        sns.heatmap(
-            cm,
-            annot=True,
-            fmt="d",
-            cmap="coolwarm",
-            xticklabels=["No", "Yes"],
-            yticklabels=["No", "Yes"],
-            ax=ax
-        )
+        else:
+            y_proba = models[selected_model_name].predict_proba(X_test)[:, 1]
+            y_pred = (y_proba >= 0.35).astype(int)
 
-        ax.set_xlabel("Predicted Label")
-        ax.set_ylabel("True Label")
-        ax.set_title("Confusion Matrix")
+            st.subheader("📈 Performance Metrics")
 
-        st.pyplot(fig)
+            m1, m2, m3 = st.columns(3)
+            m4, m5, m6 = st.columns(3)
+
+            m1.metric("Accuracy", f"{accuracy_score(y_test, y_pred):.4f}")
+            m2.metric("AUC", f"{roc_auc_score(y_test, y_proba):.4f}")
+            m3.metric("Precision", f"{precision_score(y_test, y_pred):.4f}")
+
+            m4.metric("Recall", f"{recall_score(y_test, y_pred):.4f}")
+            m5.metric("F1 Score", f"{f1_score(y_test, y_pred):.4f}")
+            m6.metric("MCC", f"{matthews_corrcoef(y_test, y_pred):.4f}")
+
+            st.subheader("🧩 Confusion Matrix Analysis")
+
+            cm = confusion_matrix(y_test, y_pred)
+
+            fig, ax = plt.subplots(figsize=(6, 5))
+            sns.heatmap(
+                cm,
+                annot=True,
+                fmt="d",
+                cmap="coolwarm",
+                xticklabels=["No", "Yes"],
+                yticklabels=["No", "Yes"],
+                ax=ax
+            )
+
+            ax.set_xlabel("Predicted Label")
+            ax.set_ylabel("True Label")
+            ax.set_title("Confusion Matrix")
+
+            st.pyplot(fig)
+
+st.divider()
