@@ -11,8 +11,6 @@
 
 The objective of this assignment is to analyze the Bank Marketing dataset and build machine learning models to predict whether a customer will subscribe to a term deposit. The task is to predict the target with "yes" or "no".
 
----
-
 ## b. Dataset Description
 
 - Dataset: Bank Marketing Dataset
@@ -34,8 +32,6 @@ The following preprocessing steps were applied on the data:
   - "Most frequent value" imputation for categorical features
 - One - Hot Encoding for categorical variables
 - Feature scaling wherever required
-
----
 
 ## c. Models Used
 
@@ -97,8 +93,6 @@ Observations from the comparison indicate that ensemble models perform better th
 Instead of relying only on the default prediction threshold of 0.5, a lower threshold (0.35) improves recall, F1-score, and MCC, with a small reduction in accuracy and its a considerable tradeoff.
 
 This is suitable for marketing analytics, where missing potential subscribers is costlier than contacting non-subscribers.
-
----
 
 ## d. Streamlit Application
 

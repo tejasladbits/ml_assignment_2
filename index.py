@@ -28,7 +28,7 @@ st.divider()
 @st.cache_resource
 def load_models():
     return {
-        "Logistic Regression": joblib.load("models/logistic_regression.pkl"),
+        "Logistic Regression": joblib.load("./models/logistic_regression.pkl"),
         "Decision Tree": joblib.load("models/decision_tree.pkl"),
         "KNN": joblib.load("models/knn.pkl"),
         "Naive Bayes": joblib.load("models/naive_bayes.pkl"),
